@@ -52,10 +52,15 @@ whole block is written back, then re-read to confirm.
    the serial number). Otherwise add it under *Settings → Devices & services
    → Add integration → Xantrex Freedom X/XC*.
 
-The default poll interval is 30 s and can be changed in the integration's
-options. Each poll holds the BLE connection for about a second; the Xantrex
-app can connect in between. If the app is connected, polls fail until it
-disconnects.
+By default the integration keeps the Bluetooth connection open and reads the
+panel every 15 s; settings and the inverter switch apply almost instantly, and
+after any change it polls every 3 s for 90 s so the inverter's reaction shows
+up quickly (the Freedom X itself takes tens of seconds to switch between
+standby and inverting). Because the panel accepts a single Bluetooth
+connection, the Xantrex phone app cannot connect while Home Assistant holds
+it; turn **Keep the Bluetooth connection open** off in the integration
+options to go back to connect-read-disconnect polling (then the app can
+connect between polls, and polls fail while it is connected).
 
 ## Protocol
 

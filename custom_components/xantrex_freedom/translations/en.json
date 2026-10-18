@@ -32,10 +32,12 @@
       "init": {
         "title": "Polling",
         "data": {
-          "scan_interval": "Poll interval (seconds)"
+          "scan_interval": "Poll interval (seconds)",
+          "keep_connected": "Keep the Bluetooth connection open"
         },
         "data_description": {
-          "scan_interval": "How often Home Assistant connects to the panel to read values. Each poll holds the Bluetooth connection for about a second, during which the Xantrex app cannot connect."
+          "scan_interval": "How often Home Assistant reads the panel. With the connection kept open a read takes well under a second; otherwise each poll connects, reads and disconnects (about 2-4 s).",
+          "keep_connected": "Fastest: settings and the inverter switch apply almost instantly. The panel accepts one Bluetooth connection, so the Xantrex phone app cannot connect while this is on."
         }
       }
     }

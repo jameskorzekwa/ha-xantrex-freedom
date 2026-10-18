@@ -25,10 +25,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    BURST_POLL_INTERVAL,
+    BURST_POLL_SECONDS,
     CONF_ADDRESS,
+    CONF_KEEP_CONNECTED,
     CONF_SCAN_INTERVAL,
     CONNECT_ATTEMPTS,
     CONNECT_TIMEOUT,
+    DEFAULT_KEEP_CONNECTED,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FAILURE_GRACE_POLLS,
@@ -60,11 +64,13 @@ class StaleServicesError(ProtocolError):
 
 
 class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
-    """Connect, read every block, disconnect.
+    """Poll the remote panel over BLE.
 
-    The remote panel accepts a single BLE central, so the connection is held
-    only for the duration of a poll.  That leaves the official phone app able
-    to connect between polls.
+    With ``keep_connected`` (the default) the BLE connection is held open, so
+    reads cost a few hundred milliseconds and writes are near-instant.  The
+    panel accepts a single central, so the Xantrex phone app cannot connect
+    while Home Assistant holds it; turning the option off makes the
+    coordinator connect and disconnect on every poll instead.
     """
 
     config_entry: XantrexConfigEntry
@@ -79,11 +85,16 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
             name=f"{DOMAIN} {self.address}",
             update_interval=timedelta(seconds=interval),
         )
+        self._keep_connected: bool = entry.options.get(
+            CONF_KEEP_CONNECTED, DEFAULT_KEEP_CONNECTED
+        )
         self._lock = asyncio.Lock()
         self._snapshot = Snapshot()
         self._static_read_at: float = 0.0
         self._last_rssi: int | None = None
         self._failures = 0
+        self._client: BleakClient | None = None
+        self._burst_task: asyncio.Task[None] | None = None
 
     # ------------------------------------------------------------------
     # Bluetooth helpers
@@ -102,20 +113,62 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
         return info.rssi if info else self._last_rssi
 
     async def _connect(self) -> BleakClient:
+        """Return a connected client, reusing the held one when enabled."""
+        if self._client is not None and self._client.is_connected:
+            return self._client
+        self._client = None
         device = self._ble_device()
         if device is None:
             raise DeviceUnavailable(f"{self.address} is not advertising")
         try:
-            return await establish_connection(
+            client = await establish_connection(
                 BleakClientWithServiceCache,
                 device,
                 self.address,
+                disconnected_callback=self._on_disconnect,
                 max_attempts=CONNECT_ATTEMPTS,
                 timeout=CONNECT_TIMEOUT,
                 ble_device_callback=self._ble_device,
             )
         except BleakNotFoundError as err:
             raise DeviceUnavailable(str(err)) from err
+        if self._keep_connected:
+            self._client = client
+        return client
+
+    def _on_disconnect(self, client: BleakClient) -> None:
+        if client is self._client:
+            _LOGGER.debug("%s disconnected", self.address)
+            self._client = None
+
+    async def _release(self, client: BleakClient) -> None:
+        """Disconnect unless the connection is being kept open."""
+        if self._keep_connected and client is self._client:
+            return
+        await _disconnect(client)
+
+    async def async_shutdown(self) -> None:
+        """Drop the held connection when the entry unloads."""
+        if self._burst_task is not None:
+            self._burst_task.cancel()
+        client, self._client = self._client, None
+        if client is not None:
+            await _disconnect(client)
+        await super().async_shutdown()
+
+    def _start_burst(self) -> None:
+        """Poll quickly for a while after a write."""
+        if self._burst_task is not None and not self._burst_task.done():
+            return
+        self._burst_task = self.config_entry.async_create_background_task(
+            self.hass, self._burst(), f"{DOMAIN} burst poll"
+        )
+
+    async def _burst(self) -> None:
+        deadline = time.monotonic() + BURST_POLL_SECONDS
+        while time.monotonic() < deadline:
+            await asyncio.sleep(BURST_POLL_INTERVAL)
+            await self.async_refresh()
 
     @staticmethod
     def _characteristic(client: BleakClient, uuid: str) -> BleakGATTCharacteristic:
@@ -210,15 +263,23 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
                 await self._read_into(client, snapshot, DYNAMIC_CHARACTERISTICS)
             except StaleServicesError as err:
                 await self._drop_service_cache(client)
+                await self._forget(client)
                 raise UpdateFailed(
                     f"stale GATT cache cleared, retrying: {err}"
                 ) from err
             except (BleakError, TimeoutError, ProtocolError) as err:
+                await self._forget(client)
                 raise UpdateFailed(f"read failed: {err}") from err
             finally:
-                await _disconnect(client)
+                await self._release(client)
             self._snapshot = snapshot
             return snapshot
+
+    async def _forget(self, client: BleakClient) -> None:
+        """Drop a held connection after an error so the next poll reconnects."""
+        if client is self._client:
+            self._client = None
+        await _disconnect(client)
 
     # ------------------------------------------------------------------
     # Writes
@@ -267,22 +328,25 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
                 )
                 if payload != current:
                     await client.write_gatt_char(char, payload, response=True)
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.2)
                 await self._read_into(client, snapshot, DYNAMIC_CHARACTERISTICS)
             except StaleServicesError as err:
                 await self._drop_service_cache(client)
+                await self._forget(client)
                 raise HomeAssistantError(
                     f"Xantrex panel {self.address} GATT cache was stale and has "
                     f"been cleared; try again: {err}"
                 ) from err
             except (BleakError, TimeoutError, ProtocolError) as err:
+                await self._forget(client)
                 raise HomeAssistantError(
                     f"Writing to Xantrex panel {self.address} failed: {err}"
                 ) from err
             finally:
-                await _disconnect(client)
+                await self._release(client)
             self._snapshot = snapshot
         self.async_set_updated_data(snapshot)
+        self._start_burst()
 
 
 async def _disconnect(client: BleakClient) -> None:
