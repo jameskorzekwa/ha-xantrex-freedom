@@ -1,0 +1,219 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Select the Freedom X remote panel",
+        "description": "Choose the Bluetooth remote panel to add. Panels advertise as \"ID\" followed by the inverter serial number.",
+        "data": {
+          "address": "Device"
+        }
+      },
+      "confirm": {
+        "title": "Add {name}?",
+        "description": "Home Assistant will connect to {name} once to read the model and serial number. Make sure the Xantrex phone app is not connected to the panel."
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the panel. Move the Bluetooth adapter closer or close the Xantrex app and try again.",
+      "not_in_range": "The panel is no longer advertising. Check it is powered and in range.",
+      "not_supported": "The device did not answer like a Freedom X/XC remote panel.",
+      "unknown": "Unexpected error; check the Home Assistant log."
+    },
+    "abort": {
+      "already_configured": "This remote panel is already configured.",
+      "already_in_progress": "A setup for this panel is already in progress.",
+      "no_devices_found": "No Freedom X remote panel is advertising within Bluetooth range.",
+      "not_supported": "This device is not a Freedom X/XC remote panel."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling",
+        "data": {
+          "scan_interval": "Poll interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often Home Assistant connects to the panel to read values. Each poll holds the Bluetooth connection for about a second, during which the Xantrex app cannot connect."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": { "name": "Problem" },
+      "ac_input_present": { "name": "AC input" },
+      "inverting": { "name": "Inverting" },
+      "overload": { "name": "Overload" },
+      "over_temperature": { "name": "Over temperature" },
+      "battery_low": { "name": "Battery low" },
+      "battery_voltage_high": { "name": "Battery voltage high" },
+      "fan_locked": { "name": "Fan locked" },
+      "output_short": { "name": "Output short circuit" },
+      "load_connected": { "name": "Load detected" }
+    },
+    "sensor": {
+      "ac_input_voltage": { "name": "AC input voltage" },
+      "ac_input_frequency": { "name": "AC input frequency" },
+      "ac_input_current": { "name": "AC input current" },
+      "ac_input_power": { "name": "AC input power" },
+      "ac_output_voltage": { "name": "AC output voltage" },
+      "ac_output_frequency": { "name": "AC output frequency" },
+      "ac_output_power": { "name": "AC output power" },
+      "ac_output_apparent_power": { "name": "AC output apparent power" },
+      "ac_output_load": { "name": "Load" },
+      "battery_voltage": { "name": "Battery voltage" },
+      "battery_current": { "name": "Battery current" },
+      "battery_power": { "name": "Battery power" },
+      "battery_charging_current": { "name": "Battery charging current" },
+      "battery_discharge_current": { "name": "Battery discharge current" },
+      "battery_capacity": { "name": "Battery capacity estimate" },
+      "heat_sink_temperature": { "name": "Heat sink temperature" },
+      "bus_voltage": { "name": "Bus voltage" },
+      "working_mode": {
+        "name": "Mode",
+        "state": {
+          "power_on": "Power on",
+          "standby": "Standby",
+          "line": "Line (AC pass-through)",
+          "battery": "Battery (inverting)",
+          "fault": "Fault",
+          "power_saving": "Power saving",
+          "unknown": "Unknown"
+        }
+      },
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "not_charging": "Not charging",
+          "constant_current": "Bulk (constant current)",
+          "constant_voltage": "Absorption (constant voltage)",
+          "float": "Float",
+          "equalize": "Equalize",
+          "rest": "Rest",
+          "unknown": "Unknown"
+        }
+      },
+      "active_faults": { "name": "Active faults" },
+      "output_power_limit": { "name": "Output power limit" },
+      "output_power_limit_timer": { "name": "Output power limit timer" },
+      "battery_type": {
+        "name": "Battery type",
+        "state": {
+          "agm": "AGM",
+          "flooded": "Flooded",
+          "gel": "Gel",
+          "custom": "Custom",
+          "lifepo4": "LiFePO4",
+          "884": "Xantrex 884",
+          "unknown": "Unknown"
+        }
+      },
+      "ignition_control_state": {
+        "name": "Ignition control",
+        "state": {
+          "off": "Off",
+          "lock_out": "Lock-out",
+          "auto_on": "Auto-on",
+          "unknown": "Unknown"
+        }
+      },
+      "transfer_mode_state": {
+        "name": "Transfer mode",
+        "state": {
+          "appliance": "Appliance (20 ms)",
+          "ups": "UPS (10 ms)",
+          "unknown": "Unknown"
+        }
+      },
+      "rssi": { "name": "Signal strength" }
+    },
+    "switch": {
+      "inverter": { "name": "Inverter" },
+      "power_saving": { "name": "Power saving mode" },
+      "audible_alarm": { "name": "Audible alarm" },
+      "equalize_charging": { "name": "Equalize charging" }
+    },
+    "select": {
+      "inverter_ignition_control": {
+        "name": "Inverter ignition control",
+        "state": {
+          "off": "Off",
+          "lock_out": "Lock-out",
+          "auto_on": "Auto-on"
+        }
+      },
+      "transfer_mode": {
+        "name": "Transfer mode",
+        "state": {
+          "appliance": "Appliance (20 ms)",
+          "ups": "UPS (10 ms)"
+        }
+      },
+      "shutdown_recovery": {
+        "name": "Shutdown recovery",
+        "state": {
+          "auto_restart": "Auto restart",
+          "manual_restart": "Manual restart"
+        }
+      },
+      "output_frequency": {
+        "name": "Output frequency",
+        "state": {
+          "50": "50 Hz",
+          "60": "60 Hz"
+        }
+      },
+      "output_voltage": {
+        "name": "Output voltage",
+        "state": {
+          "108": "108 V",
+          "110": "110 V",
+          "120": "120 V",
+          "220": "220 V",
+          "230": "230 V",
+          "240": "240 V"
+        }
+      },
+      "battery_type": {
+        "name": "Battery type",
+        "state": {
+          "agm": "AGM",
+          "flooded": "Flooded",
+          "gel": "Gel",
+          "custom": "Custom",
+          "lifepo4": "LiFePO4",
+          "884": "Xantrex 884"
+        }
+      },
+      "battery_temperature": {
+        "name": "Battery temperature",
+        "state": {
+          "cold": "Cold (10 °C)",
+          "warm": "Warm (25 °C)",
+          "hot": "Hot (40 °C)"
+        }
+      },
+      "charger_ignition_control": {
+        "name": "Charger ignition control",
+        "state": {
+          "off": "Off",
+          "auto_on": "Auto-on"
+        }
+      }
+    },
+    "number": {
+      "lbco_voltage": { "name": "Low battery cut-off voltage" },
+      "lbco_delay_timer": { "name": "Low battery cut-off delay" },
+      "lbco_recovery_voltage": { "name": "Low battery recovery voltage" },
+      "power_save_time": { "name": "Power save time" },
+      "output_power_limit_timer": { "name": "Output power limit timer" },
+      "utility_under_voltage": { "name": "Utility AC under-voltage level" },
+      "charger_current": { "name": "Charger current" },
+      "custom_absorption_voltage": { "name": "Custom absorption voltage" },
+      "custom_float_voltage": { "name": "Custom float voltage" },
+      "breaker_rating": { "name": "Breaker rating" }
+    }
+  }
+}

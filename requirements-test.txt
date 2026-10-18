@@ -1,0 +1,4 @@
+homeassistant>=2026.9.0
+pyserial==3.5
+pytest-homeassistant-custom-component==0.13.373
+ruff==0.15.0

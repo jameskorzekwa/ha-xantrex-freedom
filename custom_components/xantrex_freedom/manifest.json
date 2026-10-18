@@ -1,0 +1,29 @@
+{
+  "domain": "xantrex_freedom",
+  "name": "Xantrex Freedom X/XC",
+  "bluetooth": [
+    {
+      "local_name": "ID*",
+      "connectable": true
+    },
+    {
+      "service_uuid": "00001910-0000-1000-8000-00805f9b34fb",
+      "connectable": true
+    }
+  ],
+  "codeowners": [
+    "@jameskorzekwa"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/jameskorzekwa/ha-xantrex-freedom",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jameskorzekwa/ha-xantrex-freedom/issues",
+  "loggers": [
+    "custom_components.xantrex_freedom"
+  ],
+  "version": "0.1.0"
+}
