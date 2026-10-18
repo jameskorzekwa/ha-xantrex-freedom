@@ -45,9 +45,9 @@ tests/test_protocol.py
 - Characteristic UUIDs 0x2A01–0x2A0E are SIG-assigned numbers; ALWAYS resolve them through service 0x1910 (`client.services.get_service(SERVICE_UUID).get_characteristic(uuid)`), never by bare UUID.
 - The panel allows one central; a held connection blocks the Xantrex phone app. Keep connect/disconnect per poll.
 - Output power limit (2A0D bytes 13-14) is stored in hundreds of watts (confirmed live: raw 20 = 2000 W). The Xantrex app writes plain watts there, which is an app bug; `with_output_power_limit(watts)` writes `watts // 100`.
-- `Status2.heat_sink_temperature` is left RAW: the app says °C but a Freedom X 2000 idling at ~17 °C ambient reported 578. Candidates: `(raw-400)/10` °C (17.8), tenths of °F (14.3), `raw/2` K (15.9). Confirm with a cold-night or hot-load reading before adding a unit.
+- `Status2.heat_sink_temperature` is left RAW: the app says °C but a Freedom X 2000 idling at ~17 °C ambient reported 578, then fell to ~500 over an hour with ambient flat (a cooling heat sink). Candidates: `(raw-400)/10` °C (17.8), tenths of °F (14.3), `raw/2` K (15.9). Confirm with a cold-night or hot-load reading before adding a unit.
 - `line_fail` (0x20) is set whenever there is no AC input; it is in `INFORMATIONAL_WARNINGS` and excluded from `active_faults` / the problem sensor.
-- 2A0E byte 15 `inverter_on` is decoded by the app but not shown in its UI; it read 1 while inverting. The HA `switch.inverter` writes it — the write has NOT been exercised yet (turning the trailer inverter off blind was deemed unsafe); confirm with the owner before testing.
+- 2A0E byte 15 `inverter_on` is decoded by the app but not shown in its UI. VERIFIED live 2026-10-18 on a Freedom X 2000: writing 0 → device reports 0 at once, working mode `S` (standby) and 0 V output about 30 s later; writing 1 → mode `B` and 120 V output about 40 s later. Entities lag the switch by one or two polls; that is the inverter, not the integration.
 - Write path verified live 2026-10-18 (power-limit timer 300→290→300, read back from the device each time, ~3.5 s per write).
 - Flag 0x0100 is named "silence buzzer" in the app source but the app UI treats set = *audible alarm enabled*; we follow the UI.
 - `battery_capacity` is a lead-acid voltage estimate; the app hides it for battery types 3 (custom) and 4 (LiFePO4); so do we.

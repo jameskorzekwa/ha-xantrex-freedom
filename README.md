@@ -28,7 +28,7 @@ and nothing is installed on the inverter.
 
 **Controls** (the same settings the Xantrex app exposes)
 
-- Inverter on/off switch
+- Inverter on/off switch (verified on a Freedom X 2000: standby within ~30 s, back to inverting within ~40 s)
 - Power saving mode, audible alarm, equalize charging (XC)
 - Inverter ignition control, transfer mode (appliance/UPS), shutdown
   recovery (auto/manual restart), output voltage and frequency
