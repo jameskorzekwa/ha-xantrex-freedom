@@ -20,7 +20,6 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfPower,
-    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -212,12 +211,10 @@ SENSORS: tuple[XantrexSensorDescription, ...] = (
     ),
     # --- Inverter ---------------------------------------------------------
     XantrexSensorDescription(
-        key="heat_sink_temperature",
-        translation_key="heat_sink_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        key="heat_sink_temperature_raw",
+        translation_key="heat_sink_temperature_raw",
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_s2("heat_sink_temperature"),
     ),
     XantrexSensorDescription(
@@ -256,10 +253,15 @@ SENSORS: tuple[XantrexSensorDescription, ...] = (
         translation_key="active_faults",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda s: len(s.status2.active_warnings) if s.status2 else None,
+        value_fn=lambda s: len(s.status2.active_faults) if s.status2 else None,
         attributes_fn=lambda s: (
             {
-                "faults": list(s.status2.active_warnings),
+                "faults": list(s.status2.active_faults),
+                "informational": [
+                    w
+                    for w in s.status2.active_warnings
+                    if w not in s.status2.active_faults
+                ],
                 "raw": f"0x{s.status2.warnings:08x}",
             }
             if s.status2
@@ -267,17 +269,6 @@ SENSORS: tuple[XantrexSensorDescription, ...] = (
         ),
     ),
     # --- Settings exposed read-only (diagnostic) ---------------------------
-    XantrexSensorDescription(
-        key="output_power_limit",
-        translation_key="output_power_limit",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda s: s.settings1.output_power_limit if s.settings1 else None,
-        attributes_fn=lambda s: (
-            {"raw": s.settings1.output_power_limit_raw} if s.settings1 else {}
-        ),
-    ),
     XantrexSensorDescription(
         key="output_power_limit_timer",
         translation_key="output_power_limit_timer",

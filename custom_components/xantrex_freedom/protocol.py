@@ -301,6 +301,11 @@ WARNING_FLAGS: dict[str, int] = {
     "ntc_not_connected": 0x80000000,
 }
 
+#: Warning bits that describe a normal condition rather than a fault.
+#: ``line_fail`` is simply "no AC input" and is set whenever the trailer is
+#: unplugged, so it must not raise the problem sensor.
+INFORMATIONAL_WARNINGS: frozenset[str] = frozenset({"line_fail"})
+
 #: Device flag bits in 0x2A0E bytes 13-14 (and 0x2A0A bytes 12-13).
 FLAG_FAULT_CODE_RECORD = 0x0001
 FLAG_ALARM_ON_SOURCE_INTERRUPT = 0x0002
@@ -401,6 +406,9 @@ class Status2:
     """0x2A04: working status part 2."""
 
     battery_capacity: int
+    #: Raw temperature word.  The app labels it "heat sink temperature, C" but
+    #: a Freedom X 2000 idling at ~17 C reported 578, so it is scaled and/or
+    #: offset (likely ``(raw - 400) / 10`` C); left raw until confirmed.
     heat_sink_temperature: int
     ac_input_current: float
     scc_battery_voltage: int
@@ -438,8 +446,16 @@ class Status2:
 
     @property
     def active_warnings(self) -> tuple[str, ...]:
+        """Every set warning bit, including informational ones."""
         return tuple(
             name for name, mask in WARNING_FLAGS.items() if self.warnings & mask
+        )
+
+    @property
+    def active_faults(self) -> tuple[str, ...]:
+        """Set warning bits that indicate a real problem."""
+        return tuple(
+            name for name in self.active_warnings if name not in INFORMATIONAL_WARNINGS
         )
 
     def warning(self, name: str) -> bool:
@@ -590,15 +606,12 @@ class Settings1:
 
     @property
     def output_power_limit(self) -> int:
-        """Output power limit in watts.
+        """Output power limit in watts (the device stores hundreds of watts).
 
-        The app reads this field as ``raw * 100`` but writes plain watts; the
-        device has been observed to report the value in units of 100 W when
-        the raw value is small.  Treat values below 100 as hundreds of watts
-        and larger values as watts so both interpretations decode sensibly.
+        Confirmed on a Freedom X 2000: raw 20 with the limit at 2000 W.  The
+        Xantrex app writes plain watts here, which the device clamps.
         """
-        raw = self.output_power_limit_raw
-        return raw * 100 if raw < 100 else raw
+        return self.output_power_limit_raw * 100
 
     @property
     def lbco_recovery_off(self) -> bool:
@@ -651,9 +664,11 @@ class Settings1:
         _put_u16(buf, 11, int(volts))
         return bytes(buf)
 
-    def with_output_power_limit_raw(self, raw: int) -> bytes:
+    def with_output_power_limit(self, watts: int) -> bytes:
+        if watts <= 0 or watts % 100:
+            raise ValueError("power limit must be a positive multiple of 100 W")
         buf = self._buffer()
-        _put_u16(buf, 13, int(raw))
+        _put_u16(buf, 13, watts // 100)
         return bytes(buf)
 
     def with_output_power_limit_timer(self, seconds: int) -> bytes:

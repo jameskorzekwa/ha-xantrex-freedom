@@ -16,9 +16,9 @@ and nothing is installed on the inverter.
 - AC output (loads): voltage, frequency, power, apparent power, load %
 - Battery: voltage, current (signed: + charging, - inverting), power,
   lead-acid capacity estimate (hidden for LiFePO4/custom battery types)
-- Heat sink temperature, bus voltage, working mode (standby / line /
+- Heat sink temperature (raw word until its scaling is confirmed), bus voltage, working mode (standby / line /
   battery / fault / power saving), charging stage (XC only)
-- Active fault count with the decoded fault list as attributes
+- Active fault count with the decoded fault list as attributes ("line fail", i.e. no AC input, is reported but not treated as a fault)
 
 **Binary sensors**
 
@@ -33,7 +33,7 @@ and nothing is installed on the inverter.
 - Inverter ignition control, transfer mode (appliance/UPS), shutdown
   recovery (auto/manual restart), output voltage and frequency
 - Low battery cut-off voltage, delay and recovery voltage, power save time,
-  utility AC under-voltage level, output power limit timer
+  utility AC under-voltage level, output power limit and its timer
 - XC only: battery type, battery temperature, charger current, custom
   absorption/float voltages, breaker rating, charger ignition control
 

@@ -74,6 +74,7 @@ def test_status2() -> None:
     assert s.working_mode == "B"
     assert s.working_mode_key == "battery"
     assert s.active_warnings == ("battery_low_alarm", "overload")
+    assert s.active_faults == ("battery_low_alarm", "overload")
     assert s.warning("overload") and not s.warning("fan_locked")
 
 
@@ -124,10 +125,47 @@ def test_settings1_parse() -> None:
     assert s.lbco_recovery_off is False
 
 
-def test_settings1_power_limit_in_watts() -> None:
-    raw = bytearray(_settings1_bytes())
-    struct.pack_into("<H", raw, 13, 1500)
-    assert p.Settings1.parse(bytes(raw)).output_power_limit == 1500
+def test_settings1_power_limit_encoder() -> None:
+    s = p.Settings1.parse(_settings1_bytes())
+    out = s.with_output_power_limit(1900)
+    assert out[13:15] == _u16s(19)
+    assert p.Settings1.parse(out).output_power_limit == 1900
+    with pytest.raises(ValueError):
+        s.with_output_power_limit(1950)
+
+
+def test_live_freedom_x_2000_blocks() -> None:
+    """Bytes captured from a Freedom X 2000 (817-2000) on 2026-10-18."""
+    s1 = p.Status1.parse(bytes.fromhex("00000000b0045802190019000100d70053050000"))
+    assert s1.ac_input_voltage == 0.0
+    assert s1.ac_output_voltage == pytest.approx(120.0)
+    assert s1.ac_output_frequency == pytest.approx(60.0)
+    assert s1.ac_output_power == 25
+    assert s1.ac_output_load == 1
+    assert s1.bus_voltage == 215
+    assert s1.battery_voltage == pytest.approx(13.63)
+    s2 = p.Status2.parse(bytes.fromhex("6400420200000000020002000000002000000042"))
+    assert s2.battery_capacity == 100
+    assert s2.heat_sink_temperature == 578
+    assert s2.battery_discharge_current == 2
+    assert s2.working_mode_key == "battery"
+    assert s2.active_warnings == ("line_fail",)
+    assert s2.active_faults == ()
+    fw = p.Firmware.parse(bytes.fromhex("33302030303030312e38312030303030312e3238"))
+    assert (fw.protocol_id, fw.main_board, fw.remote_panel) == ("30", "v1.81", "v1.28")
+    ident = p.Identity.parse(bytes.fromhex("3932363432353132373030363237202020202020"))
+    assert ident.serial_number == "92642512700627"
+    r3 = p.Rating3.parse(bytes.fromhex("0000000003000000000000000000000000000000"))
+    assert r3.model.part_number == "817-2000" and r3.comm_firmware == ""
+    st1 = p.Settings1.parse(bytes.fromhex("0069002c01830019005802780014002c01005a00"))
+    assert st1.lbco_voltage == pytest.approx(10.5)
+    assert st1.lbco_recovery_voltage == pytest.approx(13.1)
+    assert st1.output_power_limit == 2000
+    assert st1.utility_under_voltage == 90
+    st2 = p.Settings2.parse(bytes.fromhex("000000008d00870014000000000c010100000000"))
+    assert st2.inverter_on is True
+    assert st2.audible_alarm is True
+    assert st2.auto_restart is False
 
 
 def test_settings1_encoders_only_touch_their_bytes() -> None:

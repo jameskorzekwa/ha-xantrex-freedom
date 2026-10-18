@@ -44,8 +44,11 @@ tests/test_protocol.py
 ## ANTI-PATTERNS / GOTCHAS
 - Characteristic UUIDs 0x2A01–0x2A0E are SIG-assigned numbers; ALWAYS resolve them through service 0x1910 (`client.services.get_service(SERVICE_UUID).get_characteristic(uuid)`), never by bare UUID.
 - The panel allows one central; a held connection blocks the Xantrex phone app. Keep connect/disconnect per poll.
-- Output power limit (2A0D bytes 13-14): app reads raw×100 W but writes watts. `Settings1.output_power_limit` treats raw<100 as hundreds of watts; write path intentionally not exposed until verified on hardware.
-- 2A0E byte 15 `inverter_on` is decoded by the app but not shown in its UI; the HA `switch.inverter` writes it — treat as experimental until confirmed on a live unit.
+- Output power limit (2A0D bytes 13-14) is stored in hundreds of watts (confirmed live: raw 20 = 2000 W). The Xantrex app writes plain watts there, which is an app bug; `with_output_power_limit(watts)` writes `watts // 100`.
+- `Status2.heat_sink_temperature` is left RAW: the app says °C but a Freedom X 2000 idling at ~17 °C ambient reported 578. Candidates: `(raw-400)/10` °C (17.8), tenths of °F (14.3), `raw/2` K (15.9). Confirm with a cold-night or hot-load reading before adding a unit.
+- `line_fail` (0x20) is set whenever there is no AC input; it is in `INFORMATIONAL_WARNINGS` and excluded from `active_faults` / the problem sensor.
+- 2A0E byte 15 `inverter_on` is decoded by the app but not shown in its UI; it read 1 while inverting. The HA `switch.inverter` writes it — the write has NOT been exercised yet (turning the trailer inverter off blind was deemed unsafe); confirm with the owner before testing.
+- Write path verified live 2026-10-18 (power-limit timer 300→290→300, read back from the device each time, ~3.5 s per write).
 - Flag 0x0100 is named "silence buzzer" in the app source but the app UI treats set = *audible alarm enabled*; we follow the UI.
 - `battery_capacity` is a lead-acid voltage estimate; the app hides it for battery types 3 (custom) and 4 (LiFePO4); so do we.
 - The Pi scanner on the trailer HA sees the 0x1910 advertisement but not the `ID…` scan-response name; the ESPHome proxy does. HA rejects `local_name` patterns in the first 3 chars (`ID*` broke the whole bluetooth component on a live install), so the manifest matches on service uuid only; `_is_candidate` also accepts the name and rejects `_is_candidate` rejecting anything with manufacturer/service data.

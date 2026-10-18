@@ -16,6 +16,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfPower,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -127,6 +128,18 @@ NUMBERS: tuple[XantrexNumberDescription, ...] = (
         value_fn=lambda s: s.settings1.power_save_time if s.settings1 else None,
         write_fn=_s1_writer("with_power_save_time"),
         range_fn=lambda s: (0, 25),
+    ),
+    XantrexNumberDescription(
+        key="output_power_limit",
+        translation_key="output_power_limit",
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_step=100,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda s: s.settings1.output_power_limit if s.settings1 else None,
+        write_fn=_s1_writer("with_output_power_limit"),
+        range_fn=lambda s: (100, s.model.rated_watts or 3000),
     ),
     XantrexNumberDescription(
         key="output_power_limit_timer",
@@ -246,6 +259,6 @@ class XantrexNumber(XantrexEntity, NumberEntity):
         return self.entity_description.value_fn(self.snapshot)
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.entity_description.native_step == 1:
+        if self.entity_description.native_step in (1, 5, 100):
             value = int(round(value))
         await self.entity_description.write_fn(self.coordinator, value)

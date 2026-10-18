@@ -42,6 +42,9 @@ async def async_get_config_entry_diagnostics(
         "active_warnings": list(snapshot.status2.active_warnings)
         if snapshot.status2
         else None,
+        "active_faults": list(snapshot.status2.active_faults)
+        if snapshot.status2
+        else None,
         "rating1": _plain(snapshot.rating1),
         "rating2": _plain(snapshot.rating2),
         "rating3": _plain(snapshot.rating3),

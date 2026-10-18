@@ -42,35 +42,86 @@
   },
   "entity": {
     "binary_sensor": {
-      "problem": { "name": "Problem" },
-      "ac_input_present": { "name": "AC input" },
-      "inverting": { "name": "Inverting" },
-      "overload": { "name": "Overload" },
-      "over_temperature": { "name": "Over temperature" },
-      "battery_low": { "name": "Battery low" },
-      "battery_voltage_high": { "name": "Battery voltage high" },
-      "fan_locked": { "name": "Fan locked" },
-      "output_short": { "name": "Output short circuit" },
-      "load_connected": { "name": "Load detected" }
+      "problem": {
+        "name": "Problem"
+      },
+      "ac_input_present": {
+        "name": "AC input"
+      },
+      "inverting": {
+        "name": "Inverting"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "over_temperature": {
+        "name": "Over temperature"
+      },
+      "battery_low": {
+        "name": "Battery low"
+      },
+      "battery_voltage_high": {
+        "name": "Battery voltage high"
+      },
+      "fan_locked": {
+        "name": "Fan locked"
+      },
+      "output_short": {
+        "name": "Output short circuit"
+      },
+      "load_connected": {
+        "name": "Load detected"
+      }
     },
     "sensor": {
-      "ac_input_voltage": { "name": "AC input voltage" },
-      "ac_input_frequency": { "name": "AC input frequency" },
-      "ac_input_current": { "name": "AC input current" },
-      "ac_input_power": { "name": "AC input power" },
-      "ac_output_voltage": { "name": "AC output voltage" },
-      "ac_output_frequency": { "name": "AC output frequency" },
-      "ac_output_power": { "name": "AC output power" },
-      "ac_output_apparent_power": { "name": "AC output apparent power" },
-      "ac_output_load": { "name": "Load" },
-      "battery_voltage": { "name": "Battery voltage" },
-      "battery_current": { "name": "Battery current" },
-      "battery_power": { "name": "Battery power" },
-      "battery_charging_current": { "name": "Battery charging current" },
-      "battery_discharge_current": { "name": "Battery discharge current" },
-      "battery_capacity": { "name": "Battery capacity estimate" },
-      "heat_sink_temperature": { "name": "Heat sink temperature" },
-      "bus_voltage": { "name": "Bus voltage" },
+      "ac_input_voltage": {
+        "name": "AC input voltage"
+      },
+      "ac_input_frequency": {
+        "name": "AC input frequency"
+      },
+      "ac_input_current": {
+        "name": "AC input current"
+      },
+      "ac_input_power": {
+        "name": "AC input power"
+      },
+      "ac_output_voltage": {
+        "name": "AC output voltage"
+      },
+      "ac_output_frequency": {
+        "name": "AC output frequency"
+      },
+      "ac_output_power": {
+        "name": "AC output power"
+      },
+      "ac_output_apparent_power": {
+        "name": "AC output apparent power"
+      },
+      "ac_output_load": {
+        "name": "Load"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_charging_current": {
+        "name": "Battery charging current"
+      },
+      "battery_discharge_current": {
+        "name": "Battery discharge current"
+      },
+      "battery_capacity": {
+        "name": "Battery capacity estimate"
+      },
+      "bus_voltage": {
+        "name": "Bus voltage"
+      },
       "working_mode": {
         "name": "Mode",
         "state": {
@@ -95,9 +146,12 @@
           "unknown": "Unknown"
         }
       },
-      "active_faults": { "name": "Active faults" },
-      "output_power_limit": { "name": "Output power limit" },
-      "output_power_limit_timer": { "name": "Output power limit timer" },
+      "active_faults": {
+        "name": "Active faults"
+      },
+      "output_power_limit_timer": {
+        "name": "Output power limit timer"
+      },
       "battery_type": {
         "name": "Battery type",
         "state": {
@@ -127,13 +181,26 @@
           "unknown": "Unknown"
         }
       },
-      "rssi": { "name": "Signal strength" }
+      "rssi": {
+        "name": "Signal strength"
+      },
+      "heat_sink_temperature_raw": {
+        "name": "Heat sink temperature (raw)"
+      }
     },
     "switch": {
-      "inverter": { "name": "Inverter" },
-      "power_saving": { "name": "Power saving mode" },
-      "audible_alarm": { "name": "Audible alarm" },
-      "equalize_charging": { "name": "Equalize charging" }
+      "inverter": {
+        "name": "Inverter"
+      },
+      "power_saving": {
+        "name": "Power saving mode"
+      },
+      "audible_alarm": {
+        "name": "Audible alarm"
+      },
+      "equalize_charging": {
+        "name": "Equalize charging"
+      }
     },
     "select": {
       "inverter_ignition_control": {
@@ -204,16 +271,39 @@
       }
     },
     "number": {
-      "lbco_voltage": { "name": "Low battery cut-off voltage" },
-      "lbco_delay_timer": { "name": "Low battery cut-off delay" },
-      "lbco_recovery_voltage": { "name": "Low battery recovery voltage" },
-      "power_save_time": { "name": "Power save time" },
-      "output_power_limit_timer": { "name": "Output power limit timer" },
-      "utility_under_voltage": { "name": "Utility AC under-voltage level" },
-      "charger_current": { "name": "Charger current" },
-      "custom_absorption_voltage": { "name": "Custom absorption voltage" },
-      "custom_float_voltage": { "name": "Custom float voltage" },
-      "breaker_rating": { "name": "Breaker rating" }
+      "lbco_voltage": {
+        "name": "Low battery cut-off voltage"
+      },
+      "lbco_delay_timer": {
+        "name": "Low battery cut-off delay"
+      },
+      "lbco_recovery_voltage": {
+        "name": "Low battery recovery voltage"
+      },
+      "power_save_time": {
+        "name": "Power save time"
+      },
+      "output_power_limit_timer": {
+        "name": "Output power limit timer"
+      },
+      "utility_under_voltage": {
+        "name": "Utility AC under-voltage level"
+      },
+      "charger_current": {
+        "name": "Charger current"
+      },
+      "custom_absorption_voltage": {
+        "name": "Custom absorption voltage"
+      },
+      "custom_float_voltage": {
+        "name": "Custom float voltage"
+      },
+      "breaker_rating": {
+        "name": "Breaker rating"
+      },
+      "output_power_limit": {
+        "name": "Output power limit"
+      }
     }
   }
 }
