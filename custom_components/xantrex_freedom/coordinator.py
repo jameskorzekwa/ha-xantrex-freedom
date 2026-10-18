@@ -55,6 +55,10 @@ class DeviceUnavailable(HomeAssistantError):
     """The panel is not advertising or cannot be connected."""
 
 
+class StaleServicesError(ProtocolError):
+    """The connected device does not expose the expected GATT table."""
+
+
 class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
     """Connect, read every block, disconnect.
 
@@ -122,11 +126,30 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
         """
         service = client.services.get_service(SERVICE_UUID)
         if service is None:
-            raise ProtocolError("Xantrex service 0x1910 not found on device")
+            raise StaleServicesError("Xantrex service 0x1910 not found on device")
         char = service.get_characteristic(uuid)
         if char is None:
-            raise ProtocolError(f"characteristic {uuid} missing from service 0x1910")
+            raise StaleServicesError(
+                f"characteristic {uuid} missing from service 0x1910"
+            )
         return char
+
+    @staticmethod
+    async def _drop_service_cache(client: BleakClient) -> None:
+        """Forget cached GATT services after the panel rebooted.
+
+        Turning the remote panel off and on (its power button also powers the
+        Bluetooth radio down) leaves BlueZ / bleak-retry-connector with a GATT
+        table that no longer matches; every later connection then reports the
+        Xantrex service as missing until the cache is cleared.
+        """
+        clear = getattr(client, "clear_cache", None)
+        if clear is None:
+            return
+        try:
+            await clear()
+        except Exception as err:  # noqa: BLE001 - best effort
+            _LOGGER.debug("clear_cache failed: %s", err)
 
     async def _read_into(
         self, client: BleakClient, snapshot: Snapshot, uuids: tuple[str, ...]
@@ -185,6 +208,11 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
                     await self._read_into(client, snapshot, STATIC_CHARACTERISTICS)
                     self._static_read_at = now
                 await self._read_into(client, snapshot, DYNAMIC_CHARACTERISTICS)
+            except StaleServicesError as err:
+                await self._drop_service_cache(client)
+                raise UpdateFailed(
+                    f"stale GATT cache cleared, retrying: {err}"
+                ) from err
             except (BleakError, TimeoutError, ProtocolError) as err:
                 raise UpdateFailed(f"read failed: {err}") from err
             finally:
@@ -241,6 +269,12 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
                     await client.write_gatt_char(char, payload, response=True)
                     await asyncio.sleep(0.5)
                 await self._read_into(client, snapshot, DYNAMIC_CHARACTERISTICS)
+            except StaleServicesError as err:
+                await self._drop_service_cache(client)
+                raise HomeAssistantError(
+                    f"Xantrex panel {self.address} GATT cache was stale and has "
+                    f"been cleared; try again: {err}"
+                ) from err
             except (BleakError, TimeoutError, ProtocolError) as err:
                 raise HomeAssistantError(
                     f"Writing to Xantrex panel {self.address} failed: {err}"
@@ -273,10 +307,12 @@ async def async_probe(
     try:
         service = client.services.get_service(SERVICE_UUID)
         if service is None:
+            await XantrexCoordinator._drop_service_cache(client)
             raise ProtocolError("Xantrex service 0x1910 not found")
         for uuid in STATIC_CHARACTERISTICS + DYNAMIC_CHARACTERISTICS:
             char = service.get_characteristic(uuid)
             if char is None:
+                await XantrexCoordinator._drop_service_cache(client)
                 raise ProtocolError(f"characteristic {uuid} missing")
             snapshot.update(uuid, bytes(await client.read_gatt_char(char)))
     finally:

@@ -53,6 +53,8 @@ tests/test_protocol.py
 - `battery_capacity` is a lead-acid voltage estimate; the app hides it for battery types 3 (custom) and 4 (LiFePO4); so do we.
 - The Pi scanner on the trailer HA sees the 0x1910 advertisement but not the `ID…` scan-response name; the ESPHome proxy does. HA rejects `local_name` patterns in the first 3 chars (`ID*` broke the whole bluetooth component on a live install), so the manifest matches on service uuid only; `_is_candidate` also accepts the name and rejects `_is_candidate` rejecting anything with manufacturer/service data.
 
+- The remote panel's power button also powers its BLE radio down. After it comes back, BlueZ/bleak-retry-connector may hand back a cached GATT table without service 0x1910 ("service 0x1910 not found" on every poll, reload does not help). `StaleServicesError` → `client.clear_cache()` → next poll rediscovers. Seen live 2026-10-18 when the owner cycled the display.
+
 ## COMMANDS
 ```sh
 uv venv -p 3.14 .venv && uv pip install -p .venv/bin/python -r requirements-test.txt
