@@ -38,9 +38,9 @@ BINARY_SENSORS: tuple[XantrexBinarySensorDescription, ...] = (
         key="problem",
         translation_key="problem",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        is_on_fn=lambda s: bool(s.status2.active_warnings) if s.status2 else None,
+        is_on_fn=lambda s: bool(s.status2.active_faults) if s.status2 else None,
         attributes_fn=lambda s: (
-            {"faults": list(s.status2.active_warnings)} if s.status2 else {}
+            {"faults": list(s.status2.active_faults)} if s.status2 else {}
         ),
     ),
     XantrexBinarySensorDescription(
