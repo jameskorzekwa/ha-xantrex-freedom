@@ -48,7 +48,7 @@ tests/test_protocol.py
 - 2A0E byte 15 `inverter_on` is decoded by the app but not shown in its UI; the HA `switch.inverter` writes it — treat as experimental until confirmed on a live unit.
 - Flag 0x0100 is named "silence buzzer" in the app source but the app UI treats set = *audible alarm enabled*; we follow the UI.
 - `battery_capacity` is a lead-acid voltage estimate; the app hides it for battery types 3 (custom) and 4 (LiFePO4); so do we.
-- The Pi scanner on the trailer HA sees the 0x1910 advertisement but not the `ID…` scan-response name; the ESPHome proxy does. Hence two bluetooth matchers (name OR service uuid) and `_is_candidate` rejecting anything with manufacturer/service data.
+- The Pi scanner on the trailer HA sees the 0x1910 advertisement but not the `ID…` scan-response name; the ESPHome proxy does. HA rejects `local_name` patterns in the first 3 chars (`ID*` broke the whole bluetooth component on a live install), so the manifest matches on service uuid only; `_is_candidate` also accepts the name and rejects `_is_candidate` rejecting anything with manufacturer/service data.
 
 ## COMMANDS
 ```sh
