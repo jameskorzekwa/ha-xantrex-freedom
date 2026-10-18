@@ -33,5 +33,9 @@ CONNECT_TIMEOUT = 20.0
 #: Maximum connection attempts per poll (bleak-retry-connector).
 CONNECT_ATTEMPTS = 3
 
+#: Consecutive failed polls tolerated (keeping the last data) before entities
+#: go unavailable, e.g. while the Xantrex phone app holds the connection.
+FAILURE_GRACE_POLLS = 2
+
 #: AC input is considered present above this voltage.
 AC_PRESENT_THRESHOLD_V = 60.0

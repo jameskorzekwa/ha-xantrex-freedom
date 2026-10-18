@@ -31,6 +31,7 @@ from .const import (
     CONNECT_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    FAILURE_GRACE_POLLS,
     STATIC_REFRESH_SECONDS,
 )
 from .protocol import (
@@ -78,6 +79,7 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
         self._snapshot = Snapshot()
         self._static_read_at: float = 0.0
         self._last_rssi: int | None = None
+        self._failures = 0
 
     # ------------------------------------------------------------------
     # Bluetooth helpers
@@ -149,6 +151,23 @@ class XantrexCoordinator(DataUpdateCoordinator[Snapshot]):
     # ------------------------------------------------------------------
 
     async def _async_update_data(self) -> Snapshot:
+        try:
+            snapshot = await self._poll()
+        except UpdateFailed as err:
+            self._failures += 1
+            if self._failures <= FAILURE_GRACE_POLLS and self._snapshot.status1:
+                _LOGGER.debug(
+                    "%s: poll %d failed (%s); keeping last data",
+                    self.address,
+                    self._failures,
+                    err,
+                )
+                return self._snapshot
+            raise
+        self._failures = 0
+        return snapshot
+
+    async def _poll(self) -> Snapshot:
         async with self._lock:
             snapshot = self._snapshot.copy()
             try:
