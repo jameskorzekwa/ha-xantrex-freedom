@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
 
 from .const import PLATFORMS
-from .coordinator import XantrexConfigEntry, XantrexCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .coordinator import XantrexConfigEntry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: XantrexConfigEntry) -> bool:
     """Set up a Freedom X/XC remote panel from a config entry."""
+    # Imported lazily so protocol.py can be unit tested without the HA
+    # bluetooth stack (and its native dependencies) installed.
+    from .coordinator import XantrexCoordinator
+
     coordinator = XantrexCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
