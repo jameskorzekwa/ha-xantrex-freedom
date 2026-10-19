@@ -62,6 +62,22 @@ it; turn **Keep the Bluetooth connection open** off in the integration
 options to go back to connect-read-disconnect polling (then the app can
 connect between polls, and polls fail while it is connected).
 
+## Things the panel does that look like bugs
+
+- **The panel's power key is a latching switch that cuts the panel's own
+  power.** Popping it out turns the inverter off *and* kills the panel's
+  Bluetooth. Leave it pressed in and use the `Inverter` switch here (the
+  app's software standby, which keeps the panel alive).
+- **The inverter's Power Save Timer (setting 05) shuts the unit down hard and
+  takes the remote panel's power with it**, so the integration loses the
+  device until someone cycles the panel key. Set the timer to OFF (`0` on the
+  *Power save time* number) and do the idle shutdown with an automation
+  instead (e.g. *AC output power below 50 W for 3 h → turn the inverter
+  switch off*). Power Save *Mode* (load sensing, setting 06) is unrelated and
+  keeps the panel powered.
+- After any panel power cycle HA reconnects on its own within 15-30 s; if a
+  stale GATT cache is detected it is cleared automatically.
+
 ## Protocol
 
 The panel exposes GATT service `0x1910` with characteristics `0x2A01` to

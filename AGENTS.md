@@ -56,6 +56,8 @@ tests/test_protocol.py
 
 - The remote panel's power button also powers its BLE radio down. After it comes back, BlueZ/bleak-retry-connector may hand back a cached GATT table without service 0x1910 ("service 0x1910 not found" on every poll, reload does not help). `StaleServicesError` → `client.clear_cache()` → next poll rediscovers. Seen live 2026-10-18 when the owner cycled the display.
 
+- Freedom X Power Save *Timer* (2A0D byte 7, setting 05) = hard auto-shutdown that also unpowers the remote panel → device vanishes from HA (seen 2026-10-18: timer 3 h → standby byte 0 at +3:01, adverts gone 2 min later). Owner guidance: keep it at 0/OFF and use the HA automation `inverter_idle_standby` on the trailer HA instead. Power Save *Mode* (flag 0x0040) is load sensing and harmless.
+
 ## COMMANDS
 ```sh
 uv venv -p 3.14 .venv && uv pip install -p .venv/bin/python -r requirements-test.txt
